@@ -1,0 +1,155 @@
+from pathlib import Path
+from PIL import Image, ImageDraw
+
+ROOT = Path(__file__).resolve().parent
+TEXTURE_ROOT = ROOT / "assets" / "minecraft" / "textures"
+BLOCK_DIR = TEXTURE_ROOT / "block"
+ITEM_DIR = TEXTURE_ROOT / "item"
+
+BLOCK_DIR.mkdir(parents=True, exist_ok=True)
+ITEM_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def rgb(r, g, b, a=255):
+    return (r, g, b, a)
+
+
+def stone_pattern(base):
+    img = Image.new("RGBA", (16, 16), base)
+    draw = ImageDraw.Draw(img)
+    for x in range(0, 16, 2):
+        for y in range(0, 16, 2):
+            shade = (base[0] + (x % 3) * 4, base[1] + (y % 3) * 4, base[2] + (x % 2) * 6, 255)
+            draw.rectangle([x, y, x + 1, y + 1], fill=shade)
+    for y in range(0, 16, 3):
+        draw.line((0, y, 15, y), fill=rgb(70, 70, 70, 110), width=1)
+    return img
+
+
+def sandstone_pattern(base):
+    img = Image.new("RGBA", (16, 16), base)
+    draw = ImageDraw.Draw(img)
+    for y in range(0, 16, 2):
+        for x in range(0, 16, 2):
+            shade = (base[0] + 10, base[1] + 10, base[2] + 10, 255)
+            draw.rectangle([x, y, x + 1, y + 1], fill=shade)
+    for y in range(1, 16, 4):
+        draw.line((0, y, 15, y), fill=rgb(base[0] - 18, base[1] - 18, base[2] - 18, 180), width=1)
+    return img
+
+
+def brick_pattern(base):
+    img = Image.new("RGBA", (16, 16), base)
+    draw = ImageDraw.Draw(img)
+    for y in range(0, 16, 4):
+        for x in range(0, 16, 4):
+            draw.rectangle([x, y, x + 3, y + 3], fill=rgb(base[0] + 12, base[1] + 12, base[2] + 12, 255))
+    for y in range(0, 16, 4):
+        draw.line((0, y, 15, y), fill=rgb(base[0] - 18, base[1] - 18, base[2] - 18, 180), width=1)
+    for x in range(0, 16, 4):
+        draw.line((x, 0, x, 15), fill=rgb(base[0] - 18, base[1] - 18, base[2] - 18, 180), width=1)
+    return img
+
+
+def gold_pattern(base):
+    img = Image.new("RGBA", (16, 16), base)
+    draw = ImageDraw.Draw(img)
+    for x in range(16):
+        for y in range(16):
+            if (x + y) % 3 == 0:
+                img.putpixel((x, y), rgb(base[0] + 12, base[1] + 12, base[2] + 8, 255))
+    draw.rectangle([0, 0, 15, 15], outline=rgb(base[0] - 25, base[1] - 20, base[2] - 12, 180), width=1)
+    return img
+
+
+def hieroglyph_pattern(base):
+    img = Image.new("RGBA", (16, 16), base)
+    draw = ImageDraw.Draw(img)
+    for x in range(0, 16, 4):
+        draw.rectangle([x + 1, 2, x + 2, 13], fill=rgb(base[0] + 18, base[1] + 18, base[2] + 18, 255))
+        draw.rectangle([x + 1, 5, x + 3, 7], fill=rgb(base[0] + 10, base[1] + 10, base[2] + 10, 255))
+    for y in range(2, 15, 4):
+        draw.line((3, y, 12, y), fill=rgb(base[0] - 18, base[1] - 18, base[2] - 18, 180), width=1)
+    return img
+
+
+def save_block(name, image):
+    image.save(BLOCK_DIR / f"{name}.png")
+
+
+def generate_desert_assets():
+    save_block("sand", sandstone_pattern(rgb(217, 200, 143)))
+    save_block("sandstone", sandstone_pattern(rgb(219, 205, 162)))
+    save_block("red_sandstone", sandstone_pattern(rgb(178, 119, 74)))
+    save_block("stone", stone_pattern(rgb(123, 123, 123)))
+    save_block("stone_bricks", brick_pattern(rgb(151, 127, 101)))
+    save_block("brick", brick_pattern(rgb(170, 116, 76)))
+    save_block("gold_block", gold_pattern(rgb(214, 176, 55)))
+    save_block("dirt", brick_pattern(rgb(145, 108, 73)))
+    save_block("grass_block_top", grass_top())
+    save_block("grass_block_side", grass_side())
+    save_block("water_still", water())
+    save_block("water_flow", water())
+
+
+def grass_top():
+    img = Image.new("RGBA", (16, 16), rgb(126, 169, 96))
+    draw = ImageDraw.Draw(img)
+    for x in range(16):
+        for y in range(16):
+            if y % 3 == 0 and x % 5 != 0:
+                img.putpixel((x, y), rgb(95, 138, 72))
+    for x in range(16):
+        if x % 4 == 0:
+            draw.line((x, 0, x + 1, 15), fill=rgb(80, 115, 58), width=1)
+    return img
+
+
+def grass_side():
+    img = Image.new("RGBA", (16, 16), rgb(120, 89, 50))
+    draw = ImageDraw.Draw(img)
+    for y in range(16):
+        for x in range(16):
+            if x < 7:
+                img.putpixel((x, y), rgb(95, 98, 63))
+            else:
+                img.putpixel((x, y), rgb(120, 94, 54))
+    for y in range(0, 16, 4):
+        draw.line((0, y, 15, y), fill=rgb(96, 74, 44), width=1)
+    return img
+
+
+def water():
+    img = Image.new("RGBA", (16, 16), rgb(62, 150, 180, 180))
+    for x in range(16):
+        for y in range(16):
+            if (x + y) % 5 == 0:
+                img.putpixel((x, y), rgb(92, 184, 214, 200))
+    return img
+
+
+def generate_items():
+    # Ancient Egyptian-inspired item texture
+    img = Image.new("RGBA", (16, 16), rgb(195, 163, 103))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle([2, 2, 13, 13], outline=rgb(111, 86, 58), width=2)
+    draw.line((4, 5, 11, 5), fill=rgb(245, 220, 136), width=2)
+    draw.line((4, 8, 11, 8), fill=rgb(245, 220, 136), width=2)
+    img.save(ITEM_DIR / "golden_scepter.png")
+
+    # Decorative gem item
+    gem = Image.new("RGBA", (16, 16), rgb(34, 108, 126, 255))
+    draw = ImageDraw.Draw(gem)
+    draw.polygon([(8, 0), (15, 8), (8, 15), (0, 8)], fill=rgb(96, 195, 214, 255), outline=rgb(255, 220, 120, 255), width=1)
+    gem.save(ITEM_DIR / "ancient_gem.png")
+
+
+def main():
+    generate_desert_assets()
+    generate_items()
+    print(f"Resource pack generated at {TEXTURE_ROOT.parent.parent}")
+
+
+if __name__ == "__main__":
+    main()
+
